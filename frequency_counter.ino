@@ -21,6 +21,8 @@ void setup () {
   Serial.println(") in hz.  Range from 1 hz > 5mhz+");
 
   pinMode(TIMER_INPUT_PIN, INPUT_PULLUP);
+
+  InputCounter.startTimer();
 }
 
 void loop () {

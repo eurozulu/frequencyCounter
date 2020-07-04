@@ -88,15 +88,16 @@ void TimerCounter::startTimer() {
 
 
 void TimerCounter::Overflow() {
-  updateFrequency(0);
   
   // Overflow with no capture checks if needs to rescale.
-  if (prescaler() == LOW_HZ_PRESCALE)
+  if (prescaler() != LOW_HZ_PRESCALE) {
+    // Switch to low hz scaling by upping the prescaler.
+    // This lowers accurcy but gives lower ranges.
+    setPrescaler(LOW_HZ_PRESCALE);
     return;
-
-  // Switch to low hz scaling by upping the prescaler.
-  // This lowers accurcy but gives lower ranges.
-  setPrescaler(LOW_HZ_PRESCALE);
+  }
+  
+  updateFrequency(0);
 }
 
 
@@ -105,6 +106,8 @@ void TimerCounter::Capture() {
   uint16_t prescl = prescaler();
   updateFrequency(prescl * count); // Captured count X prescaler to get count of prescale 1 (maybe Bigger than top)
 
+  TCNT1 = 0;  // reset counter;
+
   // Check if we need to step down the prescaler as frequencies increase.
   if (prescl == HIGH_HZ_PRESCALE)
     return;
@@ -112,7 +115,6 @@ void TimerCounter::Capture() {
   if (frequency >= PRESCALER_THRESHOLD)
     setPrescaler(HIGH_HZ_PRESCALE); // Will be switched back if overflow triggers.
 
-  TCNT1 = 0;  // reset counter;
 }
 
 
