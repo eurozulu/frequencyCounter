@@ -9,7 +9,6 @@
 // 245 hz = point at which both prescalers can scale to.
 // If TOV1 (overflow interrupt) triggers = no input in that phase, prescaler is checked and updated if needed to 256.
 // If already 256, input frequency is zero (or below sample rate of 1hz) so Timer1 resets it frequencies.
-// 256 prescaler is for hz below 245hz.  Timer remains in 256/slow mode until ICF1 ISR detects frequencies => 245, where it is switched back to 1.
 
 // on Arduino UNO Pin 8 (ICP1 pin).
 // Note: Since this uses Timer1, Pin 9 and Pin 10 can't be used for
@@ -25,33 +24,31 @@
 // tick = 0.0625μs | 62.5ns / clock tick)
 
 #define PRESCALER_COUNT 6     // The number of prescalers available to this timer (Including zero = off)
-#define PRESCALER_THRESHOLD 245  // hz at which we switch prescaler. Below this prescale @ 256, above it @ 1
+#define PRESCALER_THRESHOLD 400
 #define LOW_HZ_PRESCALE 256
-#define HIGH_HZ_PRESCALE 1
+#define HIGH_HZ_PRESCALE 0x01
 
 #define TIMER_INPUT_PIN 8  // ICP1 = D08
 
 
 class TimerCounter {
   private:
-    uint16_t frequency;
+    volatile uint16_t frequency;
 
     // A fixed list of the available prescalers for this timer
     const uint16_t PRESCALERS[PRESCALER_COUNT] {0, 1, 8, 64, 256, 1024};
 
-    // updates the frequency with the given phase time.
-    // frequency is calculated according to clock speed to establish the new frequency.
-    void updateFrequency(uint32_t period);
-
-    // Gets the current prescaler of the timer;
-    uint16_t prescaler();
     void setPrescaler(uint16_t scaler);
-
+    
   public:
     TimerCounter() {};
 
+    // Gets the current prescaler of the timer;
+    uint16_t prescaler();
+
+    // Gets the current frequency of the timer;
     uint16_t Frequency() {
-      return frequency;
+      return this->frequency;
     };
 
     // resets the timer to zero.  All registers are set to zero and timer is disabled.
@@ -65,5 +62,3 @@ class TimerCounter {
     void Capture();
 
 };
-
-static TimerCounter InputCounter;

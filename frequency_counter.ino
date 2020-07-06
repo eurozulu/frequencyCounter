@@ -8,9 +8,11 @@
 #include "timercounter.h"
 
 unsigned long lastShown = 0;
-uint16_t lastFrequency = 0;
+uint16_t lastFrequency = -1;
 
-const long timeFrame = 500;
+const long timeFrame = 50;
+
+TimerCounter *inputCounter = new TimerCounter();
 
 void setup () {
   Serial.begin(38400);
@@ -22,26 +24,31 @@ void setup () {
 
   pinMode(TIMER_INPUT_PIN, INPUT_PULLUP);
 
-  InputCounter.startTimer();
+  Serial.print("prestart prescaler: ");
+  Serial.println(inputCounter->prescaler());
+
+  inputCounter->startTimer();
 }
 
 void loop () {
-  unsigned long now = millis();
-
-  if (lastShown < now) {
+  if (lastShown < millis()) {
     uint16_t hz;
-    noInterrupts();
-    hz = InputCounter.Frequency();
-    interrupts();
-
+    hz = inputCounter->Frequency();
     if (hz != lastFrequency) {
       lastFrequency = hz;
       Serial.print("Frequency: ");
-      Serial.println(hz);
+      Serial.print(hz);
       Serial.print(" hz");
       Serial.println();
     }
     lastShown = millis() + timeFrame;
   }
-  
+}
+
+ISR(TIMER1_OVF_vect) {
+  inputCounter->Overflow();
+}
+
+ISR(TIMER1_CAPT_vect) {
+  inputCounter->Capture();
 }
