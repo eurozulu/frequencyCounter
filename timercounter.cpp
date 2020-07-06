@@ -72,7 +72,7 @@ void TimerCounter::startTimer() {
   TCCR1B &= (0 << WGM13) | (0 << WGM12) | (0 << WGM11) | (0 << WGM10);
 
   // Switch on Input Capture Edge Select (1=Rising, 0=Falling)
-  TCCR1B &= (0 << ICES1);
+  TCCR1B |= (1 << ICES1) | (1 << ICNC1);
 
   // enable interrupt ISR for both ICR1 and Overflow
   TIMSK1 |= (1 << ICIE1) | (1 << TOIE1);
